@@ -8,6 +8,7 @@
   "dependencies": {
     "apoc": "^2.1.6",
     "bcrypt": "^0.8.6",
+    "bluebird": "^3.4.0",
     "body-parser": "~1.13.2",
     "express": "~4.13.1",
     "neo4j": "^2.0.0-RC2",
