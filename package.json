@@ -12,6 +12,7 @@
     "body-parser": "~1.13.2",
     "express": "~4.13.1",
     "neo4j": "^2.0.0-RC2",
+    "node-neo4j": "^2.0.3",
     "nodemailer": "^2.4.2",
     "react": "15.0.2",
     "react-native": "^0.26.2",
