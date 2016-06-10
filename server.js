@@ -12,7 +12,7 @@ var generateEmail = require('./Utils/emailGenerator');
 var boundingBoxGenerator = require('./Utils/boundingBoxGenerator');
 var roamOffGenerator = require('./Utils/roamOffGenerator');
 var saltRounds = 10;
-
+g
 //config for email SMTP for gmail. We are send email notifications to users
 var smtpConfig = { 
   host: 'smtp.gmail.com',
@@ -317,5 +317,5 @@ app.get('/history', function(req, res){
 var PORT = process.env.PORT || 3000;
 
 app.listen(PORT, function(){
-  console.log('Example app listening on port', PORT, '!!!!!!!!!!');
+  console.log('Example app listening on THE port', PORT, '!!');
 });
