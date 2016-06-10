@@ -3,9 +3,9 @@
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-var db = require('apoc');
+// var db = require('apoc');
+// db = Promise.promisifyAll(db);
 var Promise = require('bluebird');
-db = Promise.promisifyAll(db);
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 var yelp = require('./Utils/api');
@@ -24,6 +24,7 @@ var db = new neo4j.GraphDatabase(
     process.env[GRAPHENEDB_URL] ||
     'http://localhost:7474'
 );
+db = Promise.promisifyAll(db);
 
 
 
