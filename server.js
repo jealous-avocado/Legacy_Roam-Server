@@ -12,7 +12,7 @@ var generateEmail = require('./Utils/emailGenerator');
 var boundingBoxGenerator = require('./Utils/boundingBoxGenerator');
 var roamOffGenerator = require('./Utils/roamOffGenerator');
 var saltRounds = 10;
-g
+
 //config for email SMTP for gmail. We are send email notifications to users
 var smtpConfig = { 
   host: 'smtp.gmail.com',
