@@ -22,7 +22,7 @@ var GRAPHENEDB_URL = 'http://app52006967-YuSPiu:u3sxAz6knWZmWF2t6ZFl@app52006967
 var neo4j = require('node-neo4j');
 
 var db = new neo4j('http://neo4j:teek@10.6.28.50:7474');
-// db = Promise.promisifyAll(db);
+db = Promise.promisifyAll(db);
 
 
 
@@ -56,14 +56,14 @@ app.post('/signup', function(req, res){
 
   console.log('data', data);
 
-  db.cypherQuery('MATCH (n:User {email: "{email}"}) RETURN n', {email: data.email},
-    (err, res) => {
-      if (err) {
-        console.log('error!', e);
-      } else {
-        console.log('results: ', res);
-      }
-    });
+  // db.cypherQuery('MATCH (n:User {email: "{email}"}) RETURN n', {email: data.email},
+  //   (err, res) => {
+  //     if (err) {
+  //       console.log('error!', e);
+  //     } else {
+  //       console.log('results: ', res);
+  //     }
+  //   });
 
   //Check database to see if incoming email on signup already exists
   db.cypherQueryAsync('MATCH (n:User {email: "{email}"}) RETURN n', { email: data.email }).then(function(queryRes) {
