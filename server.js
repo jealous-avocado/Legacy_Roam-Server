@@ -20,14 +20,8 @@ var saltRounds = 10;
 //neo4j database config
 var GRAPHENEDB_URL = 'http://app52006967-YuSPiu:u3sxAz6knWZmWF2t6ZFl@app52006967yuspiu.sb05.stations.graphenedb.com:24789';
 var neo4j = require('node-neo4j');
-var header= {
-  protocol: 'http',
-  host: '10.6.28.50',
-  port: '7474',
-  username: 'neo4j',
-  password: 'teek'
-};
-var db = new neo4j('http://10.6.28.50:7474', header);
+
+var db = new neo4j('http://neo4j:teek@10.6.28.50:7474');
 // db = Promise.promisifyAll(db);
 
 
