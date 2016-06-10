@@ -137,7 +137,7 @@ app.post('/roam', function(req, res) {
     console.log(matchResults, 'MATCH RESULST');
     
     //if no match found create a pending roam node
-    if (matchResults.data.length === 0) {
+    if (!matchResults.data) {
     console.log('nomatch');
       var searchParams = {
         term: 'Bars',
