@@ -4,13 +4,13 @@ var bodyParser = require('body-parser');
 var apoc = require('apoc');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
-var yelp = require('./App/Utils/api');
+var yelp = require('./Utils/api');
 var nodemailer = require('nodemailer');
-var gmailKeys = require('./App/Utils/apiKeys').gmailKeys;
-var formattedDateHtml = require('./App/Utils/dateFormatter');
-var generateEmail = require('./App/Utils/emailGenerator');
-var boundingBoxGenerator = require('./App/Utils/boundingBoxGenerator');
-var roamOffGenerator = require('./App/Utils/roamOffGenerator');
+var gmailKeys = require('./Utils/apiKeys').gmailKeys;
+var formattedDateHtml = require('./Utils/dateFormatter');
+var generateEmail = require('./Utils/emailGenerator');
+var boundingBoxGenerator = require('./Utils/boundingBoxGenerator');
+var roamOffGenerator = require('./Utils/roamOffGenerator');
 var saltRounds = 10;
 
 //config for email SMTP for gmail. We are send email notifications to users
