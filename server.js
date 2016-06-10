@@ -130,6 +130,8 @@ app.post('/roam', function(req, res) {
 
   //Checks to make sure if there is an existing pending roam within similar location by a different user
   db.cypherAsync({query: 'MATCH (n:Roam) WHERE n.creatorRoamEnd > {currentDate} AND n.creatorLatitude < {maxLat} AND n.creatorLatitude > {minLat} AND n.creatorLongitude < {maxLong} AND n.creatorLongitude > {minLong} AND n.creatorEmail <> {userEmail} AND n.numRoamers < {Roamers} AND n.maxRoamers = {Roamers} RETURN n', params: {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers, maxRoamers: Roamers}}).then(function(matchResults) {
+
+    console.log(matchResults, 'MATCH RESULST');
     
     //if no match found create a pending roam node
     if (matchResults.data.length === 0) {
