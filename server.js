@@ -51,7 +51,7 @@ app.get('/', function(req, res){
 //Post to server on signup page
 app.post('/signup', function(req, res){
 
-  console.log('HELLOOOOOOO');
+  console.log('HELLOOOOO');
 
   var data = req.body;
 
