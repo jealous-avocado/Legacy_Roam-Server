@@ -50,10 +50,10 @@ app.post('/signup', function(req, res){
   //Check database to see if incoming email on signup already exists
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n', params: { email: data.email }})
     .then(function(queryRes) {
-      console.log(queryRes.data, 'QUEREY DAYA 1111');
+      console.log(queryRes[0], 'QUEREY DAYA 1111');
 
-      if (queryRes.data) {
-        console.log('query res: ', queryRes.data);
+      if (queryRes[0]) {
+        console.log('query res: ', JSON.stringify(queryRes[0]['n'], null, 4));
       } else {
       //If there is no matching email in the database
       //Hash password upon creation of account
