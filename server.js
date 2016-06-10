@@ -89,10 +89,11 @@ app.post('/signup', function(req, res){
     //     });
     //   }); //close genssalt
     // } 
-      else {
-      res.send(JSON.stringify({message: 'Email already exists!'}));
-    }
-  }); //closing 'then'
+    //   else {
+    //   res.send(JSON.stringify({message: 'Email already exists!'}));
+    // }
+  })
+  .catch(e => console.log('error: ', e)); //closing 'then'
 }); //close post request
 
 //Validation for sign in page
