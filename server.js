@@ -62,33 +62,34 @@ app.post('/signup', function(req, res){
   //Check database to see if incoming email on signup already exists
   db.cypherAsync({query: 'MATCH (n:User {email: "%email%"}) RETURN n', params: { email: data.email }}).then(function(queryRes) {
     console.log('INSIDE QUERRRRYYYYY');
-    console.log(queryRes[0].data);
+    console.log('query', queryRes);
     //If there is no matching email in the database
-    if (queryRes[0].data.length === 0) {
-      //Hash password upon creation of account
-      bcrypt.genSalt(saltRounds, function(err, salt) {
-        if (err) {
-          console.log('Error generating salt', err);
-        }
-        bcrypt.hash(req.body.password, salt, function(err, hash) {
-          if (err) {
-            console.log('Error hashing password', err);
-          }
-          data.email = data.email.toLowerCase();
-          data.password = hash;
-          //Creates new server in database
-          db.cypherAsync({query: 'CREATE (newUser:User {firstName: "%firstName%", lastName: "%lastName%", password: "%password%", email: "%email%", picture: "%picture%", fb: "%fb%"});', params: data}).then(
-            function(dbRes){
-              console.log('saved to database:', dbRes);
-              res.send(JSON.stringify({message: 'User created'}));
-            },
-            function(fail){
-              console.log('issues saving to database:', fail);
-            }
-          );
-        });
-      }); //close genssalt
-    } else {
+    // if (queryRes[0].data.length === 0) {
+    //   //Hash password upon creation of account
+    //   bcrypt.genSalt(saltRounds, function(err, salt) {
+    //     if (err) {
+    //       console.log('Error generating salt', err);
+    //     }
+    //     bcrypt.hash(req.body.password, salt, function(err, hash) {
+    //       if (err) {
+    //         console.log('Error hashing password', err);
+    //       }
+    //       data.email = data.email.toLowerCase();
+    //       data.password = hash;
+    //       //Creates new server in database
+    //       db.cypherAsync({query: 'CREATE (newUser:User {firstName: "%firstName%", lastName: "%lastName%", password: "%password%", email: "%email%", picture: "%picture%", fb: "%fb%"});', params: data}).then(
+    //         function(dbRes){
+    //           console.log('saved to database:', dbRes);
+    //           res.send(JSON.stringify({message: 'User created'}));
+    //         },
+    //         function(fail){
+    //           console.log('issues saving to database:', fail);
+    //         }
+    //       );
+    //     });
+    //   }); //close genssalt
+    // } 
+      else {
       res.send(JSON.stringify({message: 'Email already exists!'}));
     }
   }); //closing 'then'
