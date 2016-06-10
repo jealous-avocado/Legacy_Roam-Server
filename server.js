@@ -90,12 +90,11 @@ app.post('/signin', function(req, res){
   console.log('data from facebook signin', data);
 
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(res){
-    console.log(res[0]['n.password'], 'QUEREY DAYA');
-    if(queryRes.data) {
+    var password = res[0]['n.password'];
+    if(!password) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
-      console.log(queryRes.data[0].row[0]);
-      bcrypt.compare(data.password, queryRes.data[0].row[0], function(err, bcryptRes){
+      bcrypt.compare(data.password, password, function(err, bcryptRes){
        if(err){
         console.log('error in comparing password:', err);
        }
