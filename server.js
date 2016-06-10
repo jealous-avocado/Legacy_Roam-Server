@@ -49,11 +49,11 @@ app.post('/signup', function(req, res){
 
   //Check database to see if incoming email on signup already exists
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n', params: { email: data.email }})
-    .then(function(res) {
-      res = res[0];
+    .then(function(result) {
+      result = result[0];
 
       if (res['n']) {
-        console.log('query res: ', JSON.stringify(res['n'], null, 4));
+        console.log('query res: ', JSON.stringify(result['n'], null, 4));
       } else {
       //If there is no matching email in the database
       //Hash password upon creation of account
@@ -69,8 +69,8 @@ app.post('/signup', function(req, res){
             data.password = hash;
             //Creates new server in database
             db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
-              (res) => {
-                console.log('saved to database:', res[0]['newUser']);
+              (result) => {
+                console.log('saved to database:', result[0]['newUser']);
                 res.send(JSON.stringify({message: 'User created'}));
               })
               .catch((fail) => {
@@ -89,8 +89,8 @@ app.post('/signin', function(req, res){
   var data = req.body;
   console.log('data from facebook signin', data);
 
-  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(res){
-    var password = res[0]['n.password'];
+  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(result){
+    var password = result[0]['n.password'];
     if(!password) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
