@@ -1,5 +1,6 @@
 //This file takes the user coordinates and generates a boundary within which
 //we want to find another match and also find a meeting venue
+"use strict";
 
 module.exports = function(req) {
 

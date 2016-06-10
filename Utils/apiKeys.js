@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports.yelpKeys = {
   consumer_key: 'sdp0d7EB_SQB6ZPgiL3DkQ',
   consumer_secret: '_xb7cvfkYlGZrRgkRo6OEKxKvqE',

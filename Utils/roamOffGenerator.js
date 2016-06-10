@@ -1,5 +1,6 @@
 // roamOffGenerator.js
 //
+"use strict";
 
 module.exports = function(req) {
 
