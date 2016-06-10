@@ -66,7 +66,7 @@ app.post('/signup', function(req, res){
             data.email = data.email.toLowerCase();
             data.password = hash;
             //Creates new server in database
-            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: _(data).extend({req.body.fb})}).then(
+            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: _(data).extend({fb: req.body.fb})}).then(
               function(dbRes){
                 console.log('saved to database:', dbRes);
                 res.send(JSON.stringify({message: 'User created'}));
