@@ -99,13 +99,13 @@ app.post('/signin', function(req, res){
        if(err){
         console.log('error in comparing password:', err);
        }
-        if(bcryptRes){
+        else if(bcryptRes){
           console.log('in here now!!!!');
           res.send(JSON.stringify({message: 'Password Match'}));
         } else {
           res.send(JSON.stringify({message: '2.Incorrect email/password combination!'}));
         }
-      });
+      }).then(r => console.log('PROMISE? , ', r));
     }
   });
 });
