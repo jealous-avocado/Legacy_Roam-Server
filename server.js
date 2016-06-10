@@ -1,7 +1,8 @@
+'use strict';
+
 var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
-var apoc = require('apoc');
 var bcrypt = require('bcrypt');
 var crypto = require('crypto');
 var yelp = require('./Utils/api');
@@ -11,7 +12,13 @@ var formattedDateHtml = require('./Utils/dateFormatter');
 var generateEmail = require('./Utils/emailGenerator');
 var boundingBoxGenerator = require('./Utils/boundingBoxGenerator');
 var roamOffGenerator = require('./Utils/roamOffGenerator');
+var Promise = require('bluebird');
 var saltRounds = 10;
+var _ = require('underscore');
+//neo4j database config
+var neo4j = require("neo4j");
+var db = new neo4j.GraphDatabase("http://ROAM:LP39ylgXrAGEBmN00GIy@roam.sb05.stations.graphenedb.com:24789");
+db = Promise.promisifyAll(db);
 
 //config for email SMTP for gmail. We are send email notifications to users
 var smtpConfig = { 
@@ -40,50 +47,39 @@ app.post('/signup', function(req, res){
   var data = req.body;
   console.log('data from signup', data);
 
-  console.log('data', data);
-
-  // db.cypherQuery('MATCH (n:User {email: "{email}"}) RETURN n', {email: data.email},
-  //   (err, res) => {
-  //     if (err) {
-  //       console.log('error!', e);
-  //     } else {
-  //       console.log('results: ', res);
-  //     }
-  //   });
-
   //Check database to see if incoming email on signup already exists
-  apoc.query('MATCH (n:User {email: "%email%"}) RETURN n', { email: data.email }).exec().then(function(queryRes) {
-    console.log('INSIDE QUERRRRYYYYY');
-    console.log(queryRes[0].data);
-    //If there is no matching email in the database
-    if (queryRes[0].data.length === 0) {
+  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n', params: { email: data.email }})
+    .then(function(queryRes) {
+      if (queryRes.data.length) {
+        console.log('query res: ', queryRes.data);
+      } else {
+      //If there is no matching email in the database
       //Hash password upon creation of account
-      bcrypt.genSalt(saltRounds, function(err, salt) {
-        if (err) {
-          console.log('Error generating salt', err);
-        }
-        bcrypt.hash(req.body.password, salt, function(err, hash) {
+        bcrypt.genSalt(saltRounds, function(err, salt) {
           if (err) {
-            console.log('Error hashing password', err);
+            console.log('Error generating salt', err);
           }
-          data.email = data.email.toLowerCase();
-          data.password = hash;
-          //Creates new server in database
-          apoc.query('CREATE (newUser:User {firstName: "%firstName%", lastName: "%lastName%", password: "%password%", email: "%email%", picture: "%picture%", fb: "%fb%"});', data).exec().then(
-            function(dbRes){
-              console.log('saved to database:', dbRes);
-              res.send(JSON.stringify({message: 'User created'}));
-            },
-            function(fail){
-              console.log('issues saving to database:', fail);
+          bcrypt.hash(req.body.password, salt, function(err, hash) {
+            if (err) {
+              console.log('Error hashing password', err);
             }
-          );
-        });
-      }); //close genssalt
-    } else {
-      res.send(JSON.stringify({message: 'Email already exists!'}));
-    }
-  }); //closing 'then'
+            data.email = data.email.toLowerCase();
+            data.password = hash;
+            //Creates new server in database
+            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
+              function(dbRes){
+                console.log('saved to database:', dbRes);
+                res.send(JSON.stringify({message: 'User created'}));
+              },
+              function(fail){
+                console.log('issues saving to database:', fail);
+              }
+            );
+          });
+        }); //close genssalt
+      }
+    })
+    .catch(e => console.log('error: ', e)); //closing 'then'
 }); //close post request
 
 //Validation for sign in page
@@ -91,12 +87,12 @@ app.post('/signin', function(req, res){
   var data = req.body;
   console.log('data from facebook signin', data);
 
-  apoc.query('MATCH (n:User {email: "%email%"}) RETURN n.password', {email: data.email}).exec().then(function(queryRes){
-    if(queryRes[0].data.length === 0) {
+  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(queryRes){
+    if(queryRes.data.length === 0) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
-      console.log(queryRes[0].data[0].row[0]);
-      bcrypt.compare(data.password, queryRes[0].data[0].row[0], function(err, bcryptRes){
+      console.log(queryRes.data[0].row[0]);
+      bcrypt.compare(data.password, queryRes.data[0].row[0], function(err, bcryptRes){
        if(err){
         console.log('error in comparing password:', err);
        }
@@ -133,10 +129,12 @@ app.post('/roam', function(req, res) {
   console.log('about to query db');
 
   //Checks to make sure if there is an existing pending roam within similar location by a different user
-  apoc.query('MATCH (n:Roam) WHERE n.creatorRoamEnd > %currentDate% AND n.creatorLatitude < %maxLat% AND n.creatorLatitude > %minLat% AND n.creatorLongitude < %maxLong% AND n.creatorLongitude > %minLong% AND n.creatorEmail <> "%userEmail%" AND n.numRoamers < %Roamers% AND n.maxRoamers = %Roamers% RETURN n', {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers, maxRoamers: Roamers}).exec().then(function(matchResults) {
+  db.cypherAsync({query: 'MATCH (n:Roam) WHERE n.creatorRoamEnd > {currentDate} AND n.creatorLatitude < {maxLat} AND n.creatorLatitude > {minLat} AND n.creatorLongitude < {maxLong} AND n.creatorLongitude > {minLong} AND n.creatorEmail <> {userEmail} AND n.numRoamers < {Roamers} AND n.maxRoamers = {Roamers} RETURN n', params: {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers, maxRoamers: Roamers}}).then(function(matchResults) {
+
+    console.log(matchResults, 'MATCH RESULST');
     
     //if no match found create a pending roam node
-    if (matchResults[0].data.length === 0) {
+    if (matchResults.data.length === 0) {
     console.log('nomatch');
       var searchParams = {
         term: 'Bars',
@@ -153,11 +151,11 @@ app.post('/roam', function(req, res) {
         var venueAddress = venue.location.display_address.join(' ');
 
         //Create a roam node if it doesn't exist
-        apoc.query('CREATE (m:Roam {creatorEmail: "%userEmail%", creatorLatitude: %userLatitude%, creatorLongitude: %userLongitude%, creatorRoamStart: %startRoam%, creatorRoamEnd: %roamOffAfter%, numRoamers: 1, maxRoamers: %Roamers%, status: "Pending", venueName: "%venueName%", venueAddress: "%venueAddress%"})', { Roamers: Roamers, email: userEmail, userEmail: userEmail, userLatitude: coords.userLatitude, userLongitude: coords.userLongitude,
-      startRoam: times.startRoam, roamOffAfter: times.roamOffAfter, venueName: venueName, venueAddress: venueAddress }).exec().then(function(queryRes) {
+        db.cypherAsync({query: 'CREATE (m:Roam {creatorEmail: {userEmail}, creatorLatitude: {userLatitude}, creatorLongitude: {userLongitude}, creatorRoamStart: {startRoam}, creatorRoamEnd: {roamOffAfter}, numRoamers: 1, maxRoamers: {Roamers}, status: "Pending", venueName: {venueName}, venueAddress: {venueAddress}})', params: { Roamers: Roamers, email: userEmail, userEmail: userEmail, userLatitude: coords.userLatitude, userLongitude: coords.userLongitude,
+      startRoam: times.startRoam, roamOffAfter: times.roamOffAfter, venueName: venueName, venueAddress: venueAddress }}).then(function(queryRes) {
 
           // creates the relationship between creator of roam node and the roam node
-          apoc.query('MATCH (n:User {email:"%email%"}), (m:Roam {creatorEmail: "%creatorEmail%", creatorRoamStart: %roamStart%}) CREATE (n)-[:CREATED]->(m)', {email:userEmail, creatorEmail: userEmail, roamStart: times.startRoam} ).exec().then(function(relationshipRes) {
+          db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam {creatorEmail: {creatorEmail}, creatorRoamStart: {roamStart}}) CREATE (n)-[:CREATED]->(m)', params: {email:userEmail, creatorEmail: userEmail, roamStart: times.startRoam} }).then(function(relationshipRes) {
              console.log('Relationship created', relationshipRes); 
           });
         });
@@ -166,14 +164,14 @@ app.post('/roam', function(req, res) {
     res.send('No match currently');
 
     } else { //Roam node found within a similar geographic location
-      console.log('Found a match', matchResults[0].data[0].meta[0].id);
+      console.log('Found a match', matchResults.data.graph.nodes[0].id);
 
-      var id = matchResults[0].data[0].meta[0].id;
+      var id = matchResults.data.graph.nodes[0].id;
 
       //Grabs roam node between similar location, and creates the relationship between node and user
-      apoc.query('MATCH (n:User {email:"%email%"}), (m:Roam) WHERE id(m) = %id% SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', {email:userEmail, id:id} ).exec().then(function(roamRes) {
+      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
           console.log('Relationship created b/w Users created', roamRes[0].data[0].row[0]);
-          var roamInfo = roamRes[0].data[0].row[0];
+          var roamInfo = roamRes.data[0].row[0];
 
           var date = formattedDateHtml();
 
@@ -202,7 +200,7 @@ app.post('/roam', function(req, res) {
             console.log('timeRemaining', (roamInfo.creatorRoamEnd - new Date().getTime()) / (1000*60), 'minutes');
             setTimeout(()=>{
               console.log('changing roam status to Completed', roamInfo.creatorEmail);
-              apoc.query('MATCH (m:Roam {creatorEmail: "%creatorEmail%"}) WHERE m.status="Active" SET m.status="Completed" RETURN m', {creatorEmail: roamInfo.creatorEmail}).exec();  
+              db.cypherAsync({query: 'MATCH (m:Roam {creatorEmail: {creatorEmail}}) WHERE m.status="Active" SET m.status="Completed" RETURN m', params: {creatorEmail: roamInfo.creatorEmail}});  
             }, 30000);
           })();
 
@@ -220,11 +218,11 @@ app.post('/cancel', function(req, res){
   console.log('useremail is:', userEmail);
 
   //Finds roam node that user created and cancels it
-  apoc.query('MATCH (m:Roam {creatorEmail: "%userEmail%"}) WHERE m.status="Pending" SET m.status="Canceled" RETURN m', {userEmail: userEmail}).exec().then(function(cancelRes){
+  db.cypherAsync({query: 'MATCH (m:Roam {creatorEmail: {userEmail}}) WHERE m.status="Pending" SET m.status="Canceled" RETURN m', params: {userEmail: userEmail}}).then(function(cancelRes){
 
-    console.log('Roam canceled:', cancelRes[0].data[0].row[0]);
+    console.log('Roam canceled:', cancelRes.data[0].row[0]);
 
-    var roamInfo = cancelRes[0].data[0].row[0];
+    var roamInfo = cancelRes.data[0].row[0];
 
     //Sends cancellation email
     var mailOptions = {
@@ -252,18 +250,18 @@ app.get('/finished', function(req, res){
   var userEmail = req.query.email;
   console.log('useremail is:', userEmail);
 
-  apoc.query('MATCH (n:User {email:"%email%"})-[:CREATED]->(m:Roam{status:"Completed"}) return m', {email:userEmail}).exec().then((queryRes)=> {
-    if(queryRes[0].data.length === 0){
+  db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[:CREATED]->(m:Roam{status:"Completed"}) return m', params: {email:userEmail}}).then((queryRes)=> {
+    if(queryRes.data.length === 0){
       res.json({
         venue: '',
         id: null
       });
     } else {
       console.log(JSON.stringify(queryRes[0], 4, 2));
-      console.log(queryRes[0].data[0].meta[0].id);
+      console.log(queryRes.data[0].meta[0].id);
       res.json({
-        venue: queryRes[0].data[0].row[0].venueName,
-        id: queryRes[0].data[0].meta[0].id
+        venue: queryRes.data[0].row[0].venueName,
+        id: queryRes.data[0].meta[0].id
       });
     }
   });
@@ -277,7 +275,7 @@ app.post('/finished', function(req, res){
 
   console.log(userEmail, rating, roamId);
 
-  apoc.query('MATCH (n:User {email:"%email%"})-[r]->(m:Roam{status:"Completed"}) WHERE id(m)=%id% CREATE (n)-[:ROAMED{rated:%rating%}]->(m) DELETE r return m', {email:userEmail, id:roamId, rating:rating}).exec().then((queryRes)=>{
+  db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[r]->(m:Roam{status:"Completed"}) WHERE id(m)={id} CREATE (n)-[:ROAMED{rated:{rating}}]->(m) DELETE r return m', params: {email:userEmail, id:roamId, rating:rating}}).then((queryRes)=>{
     res.send('rating success');
   });
 });
@@ -287,9 +285,9 @@ app.get('/history', function(req, res){
   var userEmail = req.query.email;
   console.log('useremail is:', userEmail);
 
-  apoc.query('MATCH (n:User {email:"%email%"})-[r:ROAMED]->(m:Roam{status:"Completed"})<--(p:User)  RETURN r,m,p', {email: userEmail}).exec().then(function(queryRes){
+  db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[r:ROAMED]->(m:Roam{status:"Completed"})<--(p:User)  RETURN r,m,p', params: {email: userEmail}}).then(function(queryRes){
     var organizedData = [];
-    queryRes[0].data.forEach((roamData)=>{
+    queryRes.data.forEach((roamData)=>{
       console.log(roamData.row[0]);
       var newRoam = {roam: {}, people: []};
       newRoam.roam.rating = roamData.row[0].rated;
