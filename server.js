@@ -165,7 +165,7 @@ app.post('/roam', function(req, res) {
       startRoam: times.startRoam, roamOffAfter: times.roamOffAfter, venueName: venueName, venueAddress: venueAddress }}).then(function(queryRes) {
 
           // creates the relationship between creator of roam node and the roam node
-          db.cypherAsync({query: 'MATCH (n:User {email:"%email%"}), (m:Roam {creatorEmail: "%creatorEmail%", creatorRoamStart: %roamStart%}) CREATE (n)-[:CREATED]->(m)', {email:userEmail, creatorEmail: userEmail, roamStart: times.startRoam} ).then(function(relationshipRes) {
+          db.cypherAsync({query: 'MATCH (n:User {email:"%email%"}), (m:Roam {creatorEmail: "%creatorEmail%", creatorRoamStart: %roamStart%}) CREATE (n)-[:CREATED]->(m)', params: {email:userEmail, creatorEmail: userEmail, roamStart: times.startRoam} }).then(function(relationshipRes) {
              console.log('Relationship created', relationshipRes); 
           });
         });
