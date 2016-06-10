@@ -69,7 +69,7 @@ app.post('/signup', function(req, res){
             data.password = hash;
             //Creates new server in database
             db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
-              (res){
+              (res) => {
                 console.log('saved to database:', res[0]['newUser']);
                 res.send(JSON.stringify({message: 'User created'}));
               })
