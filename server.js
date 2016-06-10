@@ -49,11 +49,11 @@ app.post('/signup', function(req, res){
 
   //Check database to see if incoming email on signup already exists
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n', params: { email: data.email }})
-    .then(function(queryRes) {
-      console.log(queryRes[0], 'QUEREY DAYA 1111');
+    .then(function(res) {
+      res = res[0];
 
-      if (queryRes[0]) {
-        console.log('query res: ', JSON.stringify(queryRes[0]['n'], null, 4));
+      if (res['n']) {
+        console.log('query res: ', JSON.stringify(res['n'], null, 4));
       } else {
       //If there is no matching email in the database
       //Hash password upon creation of account
@@ -69,11 +69,11 @@ app.post('/signup', function(req, res){
             data.password = hash;
             //Creates new server in database
             db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
-              function(dbRes){
-                console.log('saved to database:', dbRes);
+              (res){
+                console.log('saved to database:', res[0]['newUser']);
                 res.send(JSON.stringify({message: 'User created'}));
-              },
-              function(fail){
+              })
+              .catch((fail) => {
                 console.log('issues saving to database:', fail);
               }
             );
@@ -89,8 +89,8 @@ app.post('/signin', function(req, res){
   var data = req.body;
   console.log('data from facebook signin', data);
 
-  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(queryRes){
-    console.log(queryRes.data, 'QUEREY DAYA');
+  db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(res){
+    console.log(res[0]['n.password'], 'QUEREY DAYA');
     if(queryRes.data) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
