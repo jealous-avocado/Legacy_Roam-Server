@@ -21,7 +21,7 @@ var saltRounds = 10;
 var GRAPHENEDB_URL = 'http://app52006967-YuSPiu:u3sxAz6knWZmWF2t6ZFl@app52006967yuspiu.sb05.stations.graphenedb.com:24789';
 var neo4j = require('node-neo4j');
 
-var db = new neo4j('http://neo4j:teek@10.6.28.50:7474');
+var db = new neo4j('http://neo4j:teek@127.0.0.1:7474');
 db = Promise.promisifyAll(db);
 
 
