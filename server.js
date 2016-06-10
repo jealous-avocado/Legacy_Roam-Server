@@ -14,6 +14,7 @@ var boundingBoxGenerator = require('./Utils/boundingBoxGenerator');
 var roamOffGenerator = require('./Utils/roamOffGenerator');
 var Promise = require('bluebird');
 var saltRounds = 10;
+var _ = require('underscore');
 //neo4j database config
 var neo4j = require("neo4j");
 var db = new neo4j.GraphDatabase("http://ROAM:LP39ylgXrAGEBmN00GIy@roam.sb05.stations.graphenedb.com:24789");
@@ -65,7 +66,7 @@ app.post('/signup', function(req, res){
             data.email = data.email.toLowerCase();
             data.password = hash;
             //Creates new server in database
-            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
+            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: _(data).extend({req.body.fb})}).then(
               function(dbRes){
                 console.log('saved to database:', dbRes);
                 res.send(JSON.stringify({message: 'User created'}));
