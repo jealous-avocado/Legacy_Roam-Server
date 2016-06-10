@@ -50,7 +50,9 @@ app.post('/signup', function(req, res){
   //Check database to see if incoming email on signup already exists
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n', params: { email: data.email }})
     .then(function(queryRes) {
-      if (queryRes.data.length) {
+      console.log(queryRes.data, 'QUEREY DAYA 1111');
+
+      if (queryRes.data) {
         console.log('query res: ', queryRes.data);
       } else {
       //If there is no matching email in the database
