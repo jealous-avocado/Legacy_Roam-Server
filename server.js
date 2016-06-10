@@ -48,6 +48,8 @@ app.post('/signup', function(req, res){
   //Check database to see if incoming email on signup already exists
   apoc.query('MATCH (n:User {email: "%email%"}) RETURN n', { email: data.email }).exec().then(function(queryRes) {
     //If there is no matching email in the database
+    console.log('inside query');
+
     if (queryRes[0].data.length === 0) {
       //Hash password upon creation of account
       bcrypt.genSalt(saltRounds, function(err, salt) {
@@ -74,7 +76,8 @@ app.post('/signup', function(req, res){
     } else {
       res.send(JSON.stringify({message: 'Email already exists!'}));
     }
-  }); //closing 'then'
+  })
+  .catch(e => console.log('error in catch: ', e)); //closing 'then'
 }); //close post request
 
 //Validation for sign in page
