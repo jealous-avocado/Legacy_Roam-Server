@@ -255,18 +255,18 @@ app.get('/finished', function(req, res){
   console.log('useremail is:', userEmail);
 
   db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[:CREATED]->(m:Roam{status:"Completed"}) return m', params: {email:userEmail}}).then((queryRes)=> {
-    queryRes = queryRes[0]['m'];
+    queryRes = queryRes[0];
     if(!queryRes){
       res.json({
         venue: '',
         id: null
       });
     } else {
-      console.log(JSON.stringify(queryRes, 4, 2));
-      console.log(queryRes._id);
+      console.log(JSON.stringify(queryRes['m'], 4, 2));
+      console.log(queryRes['m']._id);
       res.json({
-        venue: queryRes.properties.venueName,
-        id: queryRes._id
+        venue: queryRes['m'].properties.venueName,
+        id: queryRes['m']._id
       });
     }
   });
