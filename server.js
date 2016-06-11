@@ -207,7 +207,9 @@ app.post('/roam', function(req, res) {
           var numberOfRoamers = roamInfo.numRoamers;
           if (numberOfRoamers === Roamers) {
            // db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
-            db.cypherAsync({query: 'MATCH (n:User {email:{roamCreator}}), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
+           db.cypherAsync({query: 'MATCH (n:User {email:{roamCreator}}) SET n.status="INACTIVE"', params:{roamCreator: roamInfo.creatorEmail}});
+
+            db.cypherAsync({query: 'MATCH (n:User {email:{roamCreator}}), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail={roamCreator} AND m.status <> "Completed" DETACH DELETE(m)', params:{id:id, roamCreator: roamInfo.creatorEmail}});
           }
 
           var date = formattedDateHtml();
