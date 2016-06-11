@@ -186,16 +186,17 @@ app.post('/roam', function(req, res) {
 
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
+      var roamInfo = matchResults['n'].properties;
+      roamInfo.status = true;
+      roamInfo.id = matchResults['n']._id;
+      console.log('sending back roaminfo', roamInfo);
+      res.json(roamInfo);      
 
       var id = matchResults['n']._id;
       //delete roams where the current user is the creator, and only person in it
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
 
 
-        var roamInfo = matchResults['n'].properties;
-        roamInfo.status = true;
-        console.log('sending back roaminfo', roamInfo);
-        res.json(roamInfo);      
 
       //Grabs roam node between similar location, and creates the relationship between node and user
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active", n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
@@ -206,7 +207,7 @@ app.post('/roam', function(req, res) {
           var numberOfRoamers = roamInfo.numRoamers;
           if (numberOfRoamers === Roamers) {
            // db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
-            db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND n.email={roamCreator} AND m.creatorEmail={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
+            db.cypherAsync({query: 'MATCH (n:User {email:{roamCreator}}), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
           }
 
           var date = formattedDateHtml();
