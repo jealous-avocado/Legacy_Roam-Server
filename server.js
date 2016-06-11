@@ -192,7 +192,7 @@ app.post('/roam', function(req, res) {
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
 
 
-        var roamInfo = matchResults[0]['n'].properties;
+        var roamInfo = matchResults['n'].properties;
         console.log('sending back roaminfo', roamInfo);
         res.json(roamInfo);
         var numberOfRoamers = roamInfo.numRoamers;
