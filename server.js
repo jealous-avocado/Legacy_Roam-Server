@@ -133,9 +133,11 @@ app.post('/roam', function(req, res) {
   db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n.status', params: {email: userEmail}}).then(result => {
     var status = result[0]['n.status'];
     if (status === 'INACTIVE') {
+      console.log(' inactive');
       res.send(JSON.stringify("You have been matched!"));
     }
     else {
+      console.log(' not inactive');
         //begin Long LOGIC
 
   //Checks to make sure if there is an existing pending roam within similar location by a different user
