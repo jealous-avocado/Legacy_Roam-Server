@@ -154,7 +154,7 @@ app.post('/roam', function(req, res) {
         var venueAddress = venue.location.display_address.join(' ');
 
         //Create a roam node if it doesn't exist
-        db.cypherAsync({query: 'CREATE (m:Roam {creatorEmail: {userEmail}, creatorLatitude: {userLatitude}, creatorLongitude: {userLongitude}, creatorRoamStart: {startRoam}, creatorRoamEnd: {roamOffAfter}, numRoamers: 1, maxRoamers: {Roamers}, status: "Pending", venueName: {venueName}, venueAddress: {venueAddress}})', params: { Roamers: Roamers, email: userEmail, userEmail: userEmail, userLatitude: coords.userLatitude, userLongitude: coords.userLongitude,
+        db.cypherAsync({query: 'CREATE (m:Roam {creatorEmail: {creatorEmail}, creatorLatitude: {userLatitude}, creatorLongitude: {userLongitude}, creatorRoamStart: {startRoam}, creatorRoamEnd: {roamOffAfter}, numRoamers: 1, maxRoamers: {Roamers}, status: "Pending", venueName: {venueName}, venueAddress: {venueAddress}})', params: { Roamers: Roamers, creatorEmail: userEmail, userLatitude: coords.userLatitude, userLongitude: coords.userLongitude,
       startRoam: times.startRoam, roamOffAfter: times.roamOffAfter, venueName: venueName, venueAddress: venueAddress }}).then(function(queryRes) {
 
           // creates the relationship between creator of roam node and the roam node
@@ -177,7 +177,7 @@ app.post('/roam', function(req, res) {
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" SET n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
 
           db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
-            console.log('result from my query', r);
+            console.log('RESULTS FROM MY QUERYYYYYYYYYYYYY', r);
           });
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
