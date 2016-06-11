@@ -223,9 +223,9 @@ app.post('/cancel', function(req, res){
   //Finds roam node that user created and cancels it
   db.cypherAsync({query: 'MATCH (m:Roam {creatorEmail: {userEmail}}) WHERE m.status="Pending" SET m.status="Canceled" RETURN m', params: {userEmail: userEmail}}).then(function(cancelRes){
 
-    console.log('Roam canceled:', cancelRes.data[0].row[0]);
+    console.log('Roam canceled:', cancelRes[0]['m']);
 
-    var roamInfo = cancelRes.data[0].row[0];
+    var roamInfo = cancelRes[0]['m'].properties;
 
     //Sends cancellation email
     var mailOptions = {
@@ -291,6 +291,8 @@ app.get('/history', function(req, res){
 
   db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[r:ROAMED]->(m:Roam{status:"Completed"})<--(p:User)  RETURN r,m,p', params: {email: userEmail}}).then(function(queryRes){
     var organizedData = [];
+    console.log('history querey: ', queryres);
+    
     queryRes.data.forEach((roamData)=>{
       console.log(roamData.row[0]);
       var newRoam = {roam: {}, people: []};
