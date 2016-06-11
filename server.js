@@ -132,6 +132,7 @@ app.post('/roam', function(req, res) {
 
   db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n.status', params: {email: userEmail}}).then(result => {
     var status = result[0]['n.status'];
+    console.log('statussss', status);
     if (status === 'INACTIVE') {
       console.log(' inactive');
       res.send(JSON.stringify("You have been matched!"));
