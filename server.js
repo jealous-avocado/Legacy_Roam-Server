@@ -228,7 +228,6 @@ app.post('/roam', function(req, res) {
 
           //If roam match has occured, when max time is reached, change status to Completed
           (() => {
-            console.log(roamInfo);
             //this time will be when to set the roam to completed.
             //for now, just wait 30 seconds though
             console.log('timeRemaining', (roamInfo.creatorRoamEnd - new Date().getTime()) / (1000*60), 'minutes');
