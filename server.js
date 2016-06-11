@@ -111,7 +111,6 @@ app.post('/signin', function(req, res){
 
 //Page to set up event between users, making API calls to YELP
 app.post('/roam', function(req, res) {
-  console.log(JSON.stringify(req.body));
 
   var dateMS = Date.now();
   var userEmail = req.body.userEmail;
@@ -131,13 +130,22 @@ app.post('/roam', function(req, res) {
   console.log(Roamers, 'roamers');
   console.log('about to query db');
 
+  db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n.status', params: {email: userEmail}}).then(result => {
+    var status = result[0]['n.status'];
+    if (status === 'INACTIVE') {
+      res.send(JSON.stringify("You have been matched!"));
+    }
+    else {
+        //begin Long LOGIC
+
   //Checks to make sure if there is an existing pending roam within similar location by a different user
-  db.cypherAsync({query: 'MATCH (n:Roam) WHERE n.creatorRoamEnd > {currentDate} AND n.creatorLatitude < {maxLat} AND n.creatorLatitude > {minLat} AND n.creatorLongitude < {maxLong} AND n.creatorLongitude > {minLong} AND n.creatorEmail <> {userEmail} AND n.numRoamers < {Roamers} AND n.maxRoamers = {Roamers} RETURN n', params: {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers, maxRoamers: Roamers}}).then(function(matchResults) {
+  db.cypherAsync({query: 'MATCH (n:Roam) WHERE n.creatorRoamEnd > {currentDate} AND n.creatorLatitude < {maxLat} AND n.creatorLatitude > {minLat} AND n.creatorLongitude < {maxLong} AND n.creatorLongitude > {minLong} AND n.creatorEmail <> {userEmail} AND n.numRoamers < {Roamers} AND n.maxRoamers = {Roamers} RETURN n', params: {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers}}).then(function(matchResults) {
 
     console.log(matchResults[0], 'MATCH RESULST');
     matchResults = matchResults[0];
     //if no match found create a pending roam node
     if (!matchResults) {
+    res.send(JSON.stringify('No match currently'));
     console.log('nomatch');
       var searchParams = {
         term: 'Bars',
@@ -164,7 +172,6 @@ app.post('/roam', function(req, res) {
         });
       });
     
-    res.send(JSON.stringify('No match currently'));
 
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
@@ -176,14 +183,15 @@ app.post('/roam', function(req, res) {
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
         var numberOfRoamers = r[0]['m.numRoamers'];
         if (numberOfRoamers === Roamers) {
-          db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m)', params: {id:id, userEmail: userEmail}});
+          db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
+          db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail=n.email DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id}});
         }
       });
 
       
 
       //Grabs roam node between similar location, and creates the relationship between node and user
-      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" SET n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
+      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
@@ -223,6 +231,12 @@ app.post('/roam', function(req, res) {
     }
   })
   .catch(e => console.log('error', e));
+
+  //END LONG LOGIC
+    }
+    
+  });
+
 });
 
 //Cancellation of roam; only the creator has cancellation abilities
