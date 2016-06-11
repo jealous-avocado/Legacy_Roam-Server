@@ -171,14 +171,19 @@ app.post('/roam', function(req, res) {
       res.send(JSON.stringify("You have been matched!"));
 
       var id = matchResults['n']._id;
-      db.cypherAsync({query: 'DELETE (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail}', params: {id: id, creatorEmail: userEmail}});
+      db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
+
+      db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
+        var numberOfRoamers = r[0]['m.numRoamers'];
+        if (numberOfRoamers === Roamers) {
+          db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m)', params: {id:id, userEmail: userEmail}});
+        }
+      });
+
+      
 
       //Grabs roam node between similar location, and creates the relationship between node and user
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" SET n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
-
-          db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
-            console.log('RESULTS FROM MY QUERYYYYYYYYYYYYY', r);
-          });
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
