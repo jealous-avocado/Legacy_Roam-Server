@@ -135,7 +135,11 @@ app.post('/roam', function(req, res) {
     console.log('statussss', status);
     if (status === 'INACTIVE') {
       console.log('inactive status');
-      res.send(JSON.stringify("You have been matched!"));
+        //TODO: first do query similar to line 198, then send back the response as roaminfo
+        //TODO: change to {info: roaminfo, message: 'matched'}
+        db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE m.creatorEmail={creatorEmail} RETURN m', params: {creatorEmail:userEmail}} ).then(function(roamRes) {
+          var venue = roamRes[0]['m'];
+          res.json(venue);
     }
     else {
       console.log('active status');
@@ -148,7 +152,9 @@ app.post('/roam', function(req, res) {
     matchResults = matchResults[0];
     //if no match found create a pending roam node
     if (!matchResults) {
-    res.send(JSON.stringify('No match currently'));
+    // res.send(JSON.stringify('No match currently'));
+    res.json({status: "No match"});
+
     console.log('nomatch');
       var searchParams = {
         term: 'Bars',
@@ -178,7 +184,6 @@ app.post('/roam', function(req, res) {
 
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
-      res.send(JSON.stringify("You have been matched!"));
 
       var id = matchResults['n']._id;
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
@@ -198,6 +203,7 @@ app.post('/roam', function(req, res) {
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
+          res.json(roamInfo);
 
           var date = formattedDateHtml();
 
