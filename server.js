@@ -68,7 +68,7 @@ app.post('/signup', function(req, res){
             data.email = data.email.toLowerCase();
             data.password = hash;
             //Creates new server in database
-            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}});', params: data}).then(
+            db.cypherAsync({query: 'CREATE (newUser:User {firstName: {firstName}, lastName: {lastName}, password: {password}, email: {email}, picture: {picture}, fb: {fb}, status: "ACTIVE"});', params: data}).then(
               () => {
                 res.send(JSON.stringify({message: 'User created'}));
               })
@@ -168,11 +168,18 @@ app.post('/roam', function(req, res) {
 
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
+      res.send(JSON.stringify("You have been matched!"));
 
       var id = matchResults['n']._id;
+      db.cypherAsync({query: 'DELETE (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail}'}, params: {id: id, creatorEmail: userEmail});
 
       //Grabs roam node between similar location, and creates the relationship between node and user
-      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
+      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" SET n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
+
+          db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
+            console.log('result from my query', r);
+          });
+
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
 
@@ -206,8 +213,6 @@ app.post('/roam', function(req, res) {
               db.cypherAsync({query: 'MATCH (m:Roam {creatorEmail: {creatorEmail}}) WHERE m.status="Active" SET m.status="Completed" RETURN m', params: {creatorEmail: roamInfo.creatorEmail}});  
             }, 30000);
           })();
-
-          res.send(JSON.stringify("You have been matched!")); 
         })
         .catch(e => console.log('error: ', e));
     }
