@@ -169,7 +169,7 @@ app.post('/roam', function(req, res) {
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
 
-      var id = matchResults._id;
+      var id = matchResults['n']._id;
 
       //Grabs roam node between similar location, and creates the relationship between node and user
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
