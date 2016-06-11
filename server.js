@@ -52,7 +52,7 @@ app.post('/signup', function(req, res){
     .then(function(result) {
       result = result[0];
 
-      if (res['n']) {
+      if (result['n']) {
         console.log('query res: ', JSON.stringify(result['n'], null, 4));
       } else {
       //If there is no matching email in the database
@@ -105,7 +105,7 @@ app.post('/signin', function(req, res){
         } else {
           res.send(JSON.stringify({message: '2.Incorrect email/password combination!'}));
         }
-      }).then(r => console.log('PROMISE? , ', r));
+      });
     }
   });
 });
@@ -255,17 +255,18 @@ app.get('/finished', function(req, res){
   console.log('useremail is:', userEmail);
 
   db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[:CREATED]->(m:Roam{status:"Completed"}) return m', params: {email:userEmail}}).then((queryRes)=> {
-    if(queryRes.data.length === 0){
+    queryRes = queryRes[0]['m'];
+    if(!queryRes){
       res.json({
         venue: '',
         id: null
       });
     } else {
-      console.log(JSON.stringify(queryRes[0], 4, 2));
-      console.log(queryRes.data[0].meta[0].id);
+      console.log(JSON.stringify(queryRes, 4, 2));
+      console.log(queryRes._id);
       res.json({
-        venue: queryRes.data[0].row[0].venueName,
-        id: queryRes.data[0].meta[0].id
+        venue: queryRes.properties.venueName,
+        id: queryRes._id
       });
     }
   });
