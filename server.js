@@ -164,7 +164,7 @@ app.post('/roam', function(req, res) {
         });
       });
     
-    res.send('No match currently');
+    res.send(JSON.stringify('No match currently'));
 
     } else { //Roam node found within a similar geographic location
       console.log('Found a match', matchResults['n']);
@@ -207,7 +207,7 @@ app.post('/roam', function(req, res) {
             }, 30000);
           })();
 
-          res.send("You have been matched!"); 
+          res.send(JSON.stringify("You have been matched!")); 
         })
         .catch(e => console.log('error: ', e));
     }
@@ -292,7 +292,7 @@ app.get('/history', function(req, res){
   db.cypherAsync({query: 'MATCH (n:User {email:{email}})-[r:ROAMED]->(m:Roam{status:"Completed"})<--(p:User)  RETURN r,m,p', params: {email: userEmail}}).then(function(queryRes){
     var organizedData = [];
     console.log('history querey: ', queryres);
-    
+
     queryRes.data.forEach((roamData)=>{
       console.log(roamData.row[0]);
       var newRoam = {roam: {}, people: []};
