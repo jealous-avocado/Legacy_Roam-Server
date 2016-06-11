@@ -134,11 +134,11 @@ app.post('/roam', function(req, res) {
     var status = result[0]['n.status'];
     console.log('statussss', status);
     if (status === 'INACTIVE') {
-      console.log(' inactive');
+      console.log('inactive status');
       res.send(JSON.stringify("You have been matched!"));
     }
     else {
-      console.log(' not inactive');
+      console.log('active status');
         //begin Long LOGIC
 
   //Checks to make sure if there is an existing pending roam within similar location by a different user
