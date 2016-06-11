@@ -90,7 +90,7 @@ app.post('/signin', function(req, res){
 
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(result){
     if(!result.length) {
-      res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
+      res.send(JSON.stringify({message: 'Incorrect email/password combination!'}));
     } else {
       console.log('in here!', result);
       var password = result[0]['n.password'];
@@ -102,7 +102,7 @@ app.post('/signin', function(req, res){
           console.log('in here now!!!!');
           res.send(JSON.stringify({message: 'Password Match'}));
         } else {
-          res.send(JSON.stringify({message: '2.Incorrect email/password combination!'}));
+          res.send(JSON.stringify({message: 'Incorrect email/password combination!'}));
         }
       });
     }
