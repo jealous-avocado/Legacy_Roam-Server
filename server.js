@@ -89,7 +89,7 @@ app.post('/signin', function(req, res){
   console.log('data from facebook signin', data);
 
   db.cypherAsync({query: 'MATCH (n:User {email: {email}}) RETURN n.password', params: {email: data.email}}).then(function(result){
-    if(!result) {
+    if(!result.length) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
       console.log('in here!', result);
