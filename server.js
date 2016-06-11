@@ -92,7 +92,7 @@ app.post('/signin', function(req, res){
     if(!result) {
       res.send(JSON.stringify({message: '1.Incorrect email/password combination!'}));
     } else {
-      console.log('in here!');
+      console.log('in here!', result);
       var password = result[0]['n.password'];
       bcrypt.compare(data.password, password, function(err, bcryptRes){
        if(err){
