@@ -130,10 +130,10 @@ app.post('/roam', function(req, res) {
   console.log(Roamers, 'roamers');
   console.log('about to query db');
 
-  db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n.status', params: {email: userEmail}}).then(result => {
+  db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n', params: {email: userEmail}}).then(result => {
     var status = result[0];
-    console.log('statussss', status);
-    if (status['n.status'] === 'INACTIVE') {
+    console.log('statussss', status.properties);
+    if (status['n'].properties.status) === 'INACTIVE') {
       console.log('inactive status');
         //TODO: first do query similar to line 198, then send back the response as roaminfo
         //TODO: change to {info: roaminfo, message: 'matched'}
@@ -191,16 +191,16 @@ app.post('/roam', function(req, res) {
       var id = matchResults['n']._id;
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
 
-      db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m', params: {id: id}}).then(r => {
-        var roamInfo = r[0]['m'].properties;
+
+        var roamInfo = matchResults[0]['n'].properties;
         console.log('sending back roaminfo', roamInfo);
         res.json(roamInfo);
         var numberOfRoamers = roamInfo.numRoamers;
         if (numberOfRoamers === Roamers) {
-          db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
+          // db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
           db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND n.email={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
         }
-      });
+
 
       
 
