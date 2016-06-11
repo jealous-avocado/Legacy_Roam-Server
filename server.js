@@ -156,7 +156,7 @@ app.post('/roam', function(req, res) {
     //if no match found create a pending roam node
     if (!matchResults) {
     // res.send(JSON.stringify('No match currently'));
-    res.json({status: "No match"});
+    res.json({status: false});
 
     console.log('nomatch');
       var searchParams = {
@@ -189,26 +189,26 @@ app.post('/roam', function(req, res) {
       console.log('Found a match', matchResults['n']);
 
       var id = matchResults['n']._id;
+      //delete roams where the current user is the creator, and only person in it
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
 
 
         var roamInfo = matchResults['n'].properties;
+        roamInfo.status = true;
         console.log('sending back roaminfo', roamInfo);
-        res.json(roamInfo);
-        var numberOfRoamers = roamInfo.numRoamers;
-        if (numberOfRoamers === Roamers) {
-          // db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
-          db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND n.email={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
-        }
-
-
-      
+        res.json(roamInfo);      
 
       //Grabs roam node between similar location, and creates the relationship between node and user
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
+
+          var numberOfRoamers = roamInfo.numRoamers;
+          if (numberOfRoamers === Roamers) {
+           // db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
+            db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND n.email={roamCreator} AND m.creatorEmail={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
+          }
 
           var date = formattedDateHtml();
 
