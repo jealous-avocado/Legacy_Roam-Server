@@ -131,9 +131,9 @@ app.post('/roam', function(req, res) {
   console.log('about to query db');
 
   db.cypherAsync({query: 'MATCH (n:User) WHERE n.email={email} return n.status', params: {email: userEmail}}).then(result => {
-    var status = result[0]['n.status'];
+    var status = result[0];
     console.log('statussss', status);
-    if (status === 'INACTIVE') {
+    if (status['n.status'] === 'INACTIVE') {
       console.log('inactive status');
         //TODO: first do query similar to line 198, then send back the response as roaminfo
         //TODO: change to {info: roaminfo, message: 'matched'}
