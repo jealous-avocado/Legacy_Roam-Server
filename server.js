@@ -152,7 +152,7 @@ app.post('/roam', function(req, res) {
         
         var venueName = venue.name;
         var venueAddress = venue.location.display_address.join(' ');
-
+        console.log(userEmail, 'USER EMAIL?!@#!@#!@#');
         //Create a roam node if it doesn't exist
         db.cypherAsync({query: 'CREATE (m:Roam {creatorEmail: {creatorEmail}, creatorLatitude: {userLatitude}, creatorLongitude: {userLongitude}, creatorRoamStart: {startRoam}, creatorRoamEnd: {roamOffAfter}, numRoamers: 1, maxRoamers: {Roamers}, status: "Pending", venueName: {venueName}, venueAddress: {venueAddress}})', params: { Roamers: Roamers, creatorEmail: userEmail, userLatitude: coords.userLatitude, userLongitude: coords.userLongitude,
       startRoam: times.startRoam, roamOffAfter: times.roamOffAfter, venueName: venueName, venueAddress: venueAddress }}).then(function(queryRes) {
