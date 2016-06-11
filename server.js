@@ -193,11 +193,12 @@ app.post('/roam', function(req, res) {
 
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m', params: {id: id}}).then(r => {
         var roamInfo = r[0]['m'].properties;
+        console.log('sending back roaminfo', roamInfo);
         res.json(roamInfo);
         var numberOfRoamers = roamInfo.numRoamers;
         if (numberOfRoamers === Roamers) {
           db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
-          db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail=n.email DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id}});
+          db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND n.email={roamCreator} AND m.status <> "Completed" DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id, roamCreator: roamInfo.creatorEmail}});
         }
       });
 
