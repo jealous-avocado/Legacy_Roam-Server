@@ -191,8 +191,10 @@ app.post('/roam', function(req, res) {
       var id = matchResults['n']._id;
       db.cypherAsync({query: 'MATCH (m:Roam) WHERE m.numRoamers=1 AND id(m) <> {id} AND m.creatorEmail={creatorEmail} DETACH DELETE(m)', params: {id: id, creatorEmail: userEmail}});
 
-      db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m.numRoamers', params: {id: id}}).then(r => {
-        var numberOfRoamers = r[0]['m.numRoamers'];
+      db.cypherAsync({query: 'MATCH (m:Roam) WHERE id(m)={id} return m', params: {id: id}}).then(r => {
+        var roamInfo = r[0]['m'].properties;
+        res.json(roamInfo);
+        var numberOfRoamers = roamInfo.numRoamers;
         if (numberOfRoamers === Roamers) {
           db.cypherAsync({query: 'MATCH (m:Roam), (n:User) WHERE id(m) <> {id} AND m.creatorEmail={userEmail} DETACH DELETE(m) SET n.status="INACTIVE"', params: {id:id, userEmail: userEmail}});
           db.cypherAsync({query: 'MATCH (n:User), (m:Roam) WHERE id(m) <> {id} AND m.creatorEmail=n.email DETACH DELETE(m) SET n.status="INACTIVE"', params:{id:id}});
@@ -206,7 +208,6 @@ app.post('/roam', function(req, res) {
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
-          res.json(roamInfo);
 
           var date = formattedDateHtml();
 
