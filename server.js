@@ -140,7 +140,7 @@ app.post('/roam', function(req, res) {
         db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE m.creatorEmail={creatorEmail} RETURN m', params: {creatorEmail:userEmail}} ).then(function(roamRes) {
           var venue = roamRes[0]['m'];
           res.json(venue);
-        }
+        });
     }
     else {
       console.log('active status');
