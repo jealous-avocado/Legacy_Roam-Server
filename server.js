@@ -52,7 +52,7 @@ app.post('/signup', function(req, res){
     .then(function(result) {
       result = result[0];
 
-      if (result['n']) {
+      if (result) {
         console.log('query res: ', JSON.stringify(result['n'], null, 4));
       } else {
       //If there is no matching email in the database
