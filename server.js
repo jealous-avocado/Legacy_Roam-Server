@@ -134,9 +134,8 @@ app.post('/roam', function(req, res) {
     var status = result[0];
     console.log('statussss', status);
     if (status['n'].properties.status === 'INACTIVE') {
-      console.log('inactive status');
-        //TODO: first do query similar to line 198, then send back the response as roaminfo
-        //TODO: change to {info: roaminfo, message: 'matched'}
+      console.log('inactive status!!!!!!!!!!!!! INACTIVE STATUSSSSSSSSSSS!!!');
+
         db.cypherAsync({query: 'MATCH (n:User {email:{creatorEmail}}), (m:Roam) WHERE m.creatorEmail={creatorEmail} RETURN m', params: {creatorEmail:userEmail}} ).then(function(roamRes) {
           var venue = roamRes[0]['m'];
           console.log('venueeeeeeeeeeeeeeeeee', venue);
@@ -199,7 +198,7 @@ app.post('/roam', function(req, res) {
         res.json(roamInfo);      
 
       //Grabs roam node between similar location, and creates the relationship between node and user
-      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
+      db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active", n.status="INACTIVE" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
 
           console.log('Relationship created b/w Users created', roamRes[0]['m']);
           var roamInfo = roamRes[0]['m'].properties;
