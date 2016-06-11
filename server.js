@@ -134,10 +134,10 @@ app.post('/roam', function(req, res) {
   //Checks to make sure if there is an existing pending roam within similar location by a different user
   db.cypherAsync({query: 'MATCH (n:Roam) WHERE n.creatorRoamEnd > {currentDate} AND n.creatorLatitude < {maxLat} AND n.creatorLatitude > {minLat} AND n.creatorLongitude < {maxLong} AND n.creatorLongitude > {minLong} AND n.creatorEmail <> {userEmail} AND n.numRoamers < {Roamers} AND n.maxRoamers = {Roamers} RETURN n', params: {currentDate:dateMS, maxLat: coords.maxLat, minLat: coords.minLat, maxLong: coords.maxLong, minLong: coords.minLong, userEmail: userEmail, Roamers: Roamers, maxRoamers: Roamers}}).then(function(matchResults) {
 
-    console.log(matchResults, 'MATCH RESULST');
-    
+    console.log(matchResults[0], 'MATCH RESULST');
+    matchResults = matchResults[0];
     //if no match found create a pending roam node
-    if (!matchResults.data) {
+    if (!matchResults) {
     console.log('nomatch');
       var searchParams = {
         term: 'Bars',
@@ -167,14 +167,14 @@ app.post('/roam', function(req, res) {
     res.send('No match currently');
 
     } else { //Roam node found within a similar geographic location
-      console.log('Found a match', matchResults.data.graph.nodes[0].id);
+      console.log('Found a match', matchResults['n']);
 
-      var id = matchResults.data.graph.nodes[0].id;
+      var id = matchResults._id;
 
       //Grabs roam node between similar location, and creates the relationship between node and user
       db.cypherAsync({query: 'MATCH (n:User {email:{email}}), (m:Roam) WHERE id(m) = {id} SET m.numRoamers=m.numRoamers+1, m.status="Active" CREATE (n)-[:CREATED]->(m) RETURN m', params: {email:userEmail, id:id}} ).then(function(roamRes) {
-          console.log('Relationship created b/w Users created', roamRes[0].data[0].row[0]);
-          var roamInfo = roamRes.data[0].row[0];
+          console.log('Relationship created b/w Users created', roamRes[0]['m']);
+          var roamInfo = roamRes[0]['m'].properties;
 
           var date = formattedDateHtml();
 
